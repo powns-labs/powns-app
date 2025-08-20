@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation"
 import { Navbar } from "@/components/Navbar"
 import { useReadContract, useAccount } from 'wagmi'
-import { pownsRegistryABI } from 'powns-sdk'
+import { pownsRegistryABI } from '@/lib/abis'
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
 import { ArrowLeft, Cpu, Hash, User } from "lucide-react"

@@ -2,52 +2,21 @@
 
 import { Navbar } from "@/components/Navbar"
 import { useAccount, useReadContract, useReadContracts } from 'wagmi'
-import { pownsRegistryABI } from 'powns-sdk'
+import { pownsRegistryABI } from '@/lib/abis'
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
 import { Loader2, Plus, ExternalLink } from "lucide-react"
 
 const REGISTRY_ADDRESS = (process.env.NEXT_PUBLIC_REGISTRY_ADDRESS || "0xc0ffee254729296a45a3885639AC7E10F9d54979") as `0x${string}`
 
-// Extend ABI for dashboard needs
-const extendedABI = [
-  ...pownsRegistryABI,
-  {
-    inputs: [{name: "owner", type: "address"}],
-    name: "balanceOf",
-    outputs: [{name: "", type: "uint256"}],
-    stateMutability: "view",
-    type: "function"
-  },
-  {
-    inputs: [{name: "owner", type: "address"}, {name: "index", type: "uint256"}],
-    name: "tokenOfOwnerByIndex",
-    outputs: [{name: "", type: "uint256"}],
-    stateMutability: "view",
-    type: "function"
-  },
-  {
-    inputs: [{name: "", type: "uint256"}],
-    name: "nameHashes",
-    outputs: [{name: "", type: "bytes32"}],
-    stateMutability: "view",
-    type: "function"
-  },
-  {
-    inputs: [{name: "", type: "bytes32"}],
-    name: "names",
-    outputs: [{name: "", type: "string"}],
-    stateMutability: "view",
-    type: "function"
-  }
-] as const
+
 
 export default function Dashboard() {
     const { address, isConnected } = useAccount()
 
     const { data: balance, isLoading: loadingBalance } = useReadContract({
         address: REGISTRY_ADDRESS,
-        abi: extendedABI,
+        abi: pownsRegistryABI,
         functionName: 'balanceOf',
         args: address ? [address] : undefined,
         query: { enabled: !!address }
@@ -59,7 +28,7 @@ export default function Dashboard() {
     const { data: tokenIds } = useReadContracts({
         contracts: Array.from({ length: count }).map((_, i) => ({
             address: REGISTRY_ADDRESS,
-            abi: extendedABI,
+            abi: pownsRegistryABI,
             functionName: 'tokenOfOwnerByIndex',
             args: [address!, BigInt(i)]
         })),
@@ -70,9 +39,9 @@ export default function Dashboard() {
     const { data: nameHashes } = useReadContracts({
         contracts: tokenIds?.map(t => ({
             address: REGISTRY_ADDRESS,
-            abi: extendedABI,
+            abi: pownsRegistryABI,
             functionName: 'nameHashes',
-            args: [t.result as bigint]
+            args: [(t.result as unknown) as bigint]
         })) || [],
         query: { enabled: !!tokenIds }
     })
@@ -81,14 +50,14 @@ export default function Dashboard() {
     const { data: names } = useReadContracts({
         contracts: nameHashes?.map(h => ({
             address: REGISTRY_ADDRESS,
-            abi: extendedABI,
+            abi: pownsRegistryABI,
             functionName: 'names',
-            args: [h.result as `0x${string}`]
+            args: [(h.result as unknown) as `0x${string}`]
         })) || [],
         query: { enabled: !!nameHashes }
     })
 
-    const domains = names?.map((n) => n.result as string).filter(Boolean) || []
+    const domains = names?.map((n) => (n.result as unknown) as string).filter(Boolean) || []
 
     return (
         <main className="min-h-screen bg-background flex flex-col">
